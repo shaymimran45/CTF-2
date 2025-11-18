@@ -197,6 +197,38 @@ class ApiClient {
       return { success: false, error: 'Network error. Please try again.' }
     }
   }
+
+  async getAdminChallenges(): Promise<ApiResponse<{ challenges: Challenge[] }>> {
+    return this.request('/admin/challenges')
+  }
+
+  async updateChallenge(id: string, payload: Partial<Pick<Challenge, 'title' | 'description' | 'category' | 'difficulty' | 'points' | 'flag' | 'isVisible'>>): Promise<ApiResponse<{ challenge: Challenge }>> {
+    return this.request(`/admin/challenges/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload)
+    })
+  }
+
+  async toggleChallengeVisibility(id: string): Promise<ApiResponse<{ challenge: Challenge }>> {
+    return this.request(`/admin/challenges/${id}/toggle-visibility`, {
+      method: 'POST'
+    })
+  }
+
+  async deleteAdminChallenge(id: string): Promise<ApiResponse<{ deleted: boolean }>> {
+    return this.request(`/admin/challenges/${id}`, { method: 'DELETE' })
+  }
+
+  async deleteAllChallenges(): Promise<ApiResponse<{ deletedCount: number }>> {
+    return this.request('/admin/challenges', { method: 'DELETE' })
+  }
+
+  async setAllVisibility(isVisible: boolean): Promise<ApiResponse<{ updatedCount: number }>> {
+    return this.request('/admin/challenges/visibility', {
+      method: 'POST',
+      body: JSON.stringify({ isVisible })
+    })
+  }
 }
 
 export const api = new ApiClient()

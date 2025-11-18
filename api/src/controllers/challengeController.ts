@@ -257,7 +257,15 @@ export const downloadFile = async (req: AuthenticatedRequest, res: Response): Pr
       ? file.filePath
       : path.join(process.cwd(), file.filePath)
 
-    res.download(absolutePath, file.filename)
+    if (!absolutePath || !fs.existsSync(absolutePath)) {
+      res.status(404).json({ error: 'File not found on server' })
+      return
+    }
+    const stat = fs.statSync(absolutePath)
+    res.setHeader('Content-Length', stat.size)
+    res.setHeader('Content-Type', 'application/octet-stream')
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(file.filename)}"`)
+    fs.createReadStream(absolutePath).pipe(res)
   } catch (error) {
     console.error('Download file error:', error)
     res.status(500).json({ error: 'Internal server error' })
@@ -371,6 +379,84 @@ export const deleteAllChallenges = async (req: AuthenticatedRequest, res: Respon
     res.json({ deletedCount: result.count })
   } catch (error) {
     console.error('Delete all challenges error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const getAllChallengesAdmin = async (_req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const challenges = await prisma.challenge.findMany({
+      include: {
+        _count: { select: { solves: true } },
+        files: { select: { id: true, filename: true, fileSize: true, uploadedAt: true } }
+      },
+      orderBy: [{ createdAt: 'desc' }]
+    })
+    res.json({ challenges })
+  } catch (error) {
+    console.error('Get all challenges admin error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const updateChallenge = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const { title, description, category, difficulty, points, flag, isVisible } = req.body
+    const existing = await prisma.challenge.findUnique({ where: { id } })
+    if (!existing) {
+      res.status(404).json({ error: 'Challenge not found' })
+      return
+    }
+    const updated = await prisma.challenge.update({
+      where: { id },
+      data: {
+        title: typeof title === 'string' ? title : existing.title,
+        description: typeof description === 'string' ? description : existing.description,
+        category: typeof category === 'string' ? category : existing.category,
+        difficulty: typeof difficulty === 'string' ? difficulty : existing.difficulty,
+        points: typeof points !== 'undefined' ? Number(points) : existing.points,
+        flag: typeof flag === 'string' ? flag : existing.flag,
+        isVisible: typeof isVisible !== 'undefined' ? (isVisible === 'true' || isVisible === true) : existing.isVisible
+      }
+    })
+    res.json({ challenge: updated })
+  } catch (error) {
+    console.error('Update challenge error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const toggleVisibility = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const existing = await prisma.challenge.findUnique({ where: { id } })
+    if (!existing) {
+      res.status(404).json({ error: 'Challenge not found' })
+      return
+    }
+    const updated = await prisma.challenge.update({
+      where: { id },
+      data: { isVisible: !existing.isVisible }
+    })
+    res.json({ challenge: updated })
+  } catch (error) {
+    console.error('Toggle visibility error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const setAllVisibility = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { isVisible } = req.body as { isVisible: boolean }
+    if (typeof isVisible === 'undefined') {
+      res.status(400).json({ error: 'isVisible required' })
+      return
+    }
+    const result = await prisma.challenge.updateMany({ data: { isVisible: !!isVisible } })
+    res.json({ updatedCount: result.count })
+  } catch (error) {
+    console.error('Set all visibility error:', error)
     res.status(500).json({ error: 'Internal server error' })
   }
 }

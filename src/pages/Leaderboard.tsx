@@ -73,10 +73,11 @@ const Leaderboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white flex items-center space-x-3">
+              <h1 className="text-3xl font-bold text-white flex items-center space-x-3 horror-title">
                 <Trophy className="h-8 w-8 text-yellow-400" />
                 <span>Leaderboard</span>
               </h1>
+              <div className="mt-2 horror-divider"></div>
               <p className="text-gray-400 mt-1">
                 See how you stack up against other players
               </p>
@@ -84,7 +85,7 @@ const Leaderboard: React.FC = () => {
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <p className="text-sm text-gray-400">Your Rank</p>
-                <p className="text-2xl font-bold text-cyan-400">
+                <p className="text-2xl font-bold text-red-400">
                   #{leaderboard.findIndex(entry => entry.id === user.id) + 1 || 'N/A'}
                 </p>
               </div>

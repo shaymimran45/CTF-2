@@ -1,6 +1,6 @@
 import express from 'express'
 import { register, login, getProfile } from '../controllers/authController'
-import { getChallenges, getChallenge, submitFlag, getCategories, createChallenge, deleteChallenge, deleteAllChallenges, downloadFile } from '../controllers/challengeController'
+import { getChallenges, getChallenge, submitFlag, getCategories, createChallenge, deleteChallenge, deleteAllChallenges, downloadFile, getAllChallengesAdmin, updateChallenge, toggleVisibility, setAllVisibility } from '../controllers/challengeController'
 import { getLeaderboard, getStatistics } from '../controllers/leaderboardController'
 import { authenticateToken, requireRole } from '../lib/auth'
 import multer from 'multer'
@@ -39,9 +39,13 @@ router.post('/challenges/:id/submit', authenticateToken, submitFlag)
 router.post('/admin/challenges', authenticateToken, requireRole(['admin']), upload.array('files'), createChallenge)
 router.delete('/admin/challenges/:id', authenticateToken, requireRole(['admin']), deleteChallenge)
 router.delete('/admin/challenges', authenticateToken, requireRole(['admin']), deleteAllChallenges)
+router.get('/admin/challenges', authenticateToken, requireRole(['admin']), getAllChallengesAdmin)
+router.patch('/admin/challenges/:id', authenticateToken, requireRole(['admin']), updateChallenge)
+router.post('/admin/challenges/:id/toggle-visibility', authenticateToken, requireRole(['admin']), toggleVisibility)
+router.post('/admin/challenges/visibility', authenticateToken, requireRole(['admin']), setAllVisibility)
 
 // File download
-router.get('/files/:id', authenticateToken, downloadFile)
+router.get('/files/:id', downloadFile)
 
 // Leaderboard routes
 router.get('/leaderboard', getLeaderboard)

@@ -25,8 +25,8 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
-              <Target className="h-8 w-8 text-blue-500" />
-              <h1 className="ml-3 text-2xl font-bold text-white">CTF Platform</h1>
+              <Target className="h-8 w-8 text-red-500" />
+              <h1 className="ml-3 text-2xl font-bold text-white horror-title">CTF Platform</h1>
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center text-gray-300">
@@ -149,7 +149,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Link
             to="/challenges"
-            className="bg-gray-800 overflow-hidden shadow rounded-lg hover:bg-gray-750 transition-colors"
+            className="bg-gray-800 overflow-hidden shadow rounded-lg hover:bg-gray-700 transition-colors horror-glow"
           >
             <div className="p-6">
               <div className="flex items-center">
@@ -164,7 +164,7 @@ export default function Dashboard() {
 
           <Link
             to="/leaderboard"
-            className="bg-gray-800 overflow-hidden shadow rounded-lg hover:bg-gray-750 transition-colors"
+            className="bg-gray-800 overflow-hidden shadow rounded-lg hover:bg-gray-700 transition-colors horror-glow"
           >
             <div className="p-6">
               <div className="flex items-center">
@@ -179,7 +179,7 @@ export default function Dashboard() {
 
           <Link
             to="/profile"
-            className="bg-gray-800 overflow-hidden shadow rounded-lg hover:bg-gray-750 transition-colors"
+            className="bg-gray-800 overflow-hidden shadow rounded-lg hover:bg-gray-700 transition-colors horror-glow"
           >
             <div className="p-6">
               <div className="flex items-center">
@@ -194,7 +194,7 @@ export default function Dashboard() {
           {user?.role === 'admin' && (
             <Link
               to="/admin"
-              className="bg-gray-800 overflow-hidden shadow rounded-lg hover:bg-gray-750 transition-colors"
+              className="bg-gray-800 overflow-hidden shadow rounded-lg hover:bg-gray-700 transition-colors horror-glow"
             >
               <div className="p-6">
                 <div className="flex items-center">

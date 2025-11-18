@@ -18,6 +18,7 @@ const ChallengeDetail: React.FC = () => {
   const [flagInput, setFlagInput] = useState('')
   const [showHint, setShowHint] = useState<number | null>(null)
   const [usedHints, setUsedHints] = useState<number[]>([])
+  const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -81,15 +82,11 @@ const ChallengeDetail: React.FC = () => {
 
   const downloadFile = async (fileId: string, filename: string) => {
     try {
+      setDownloadingFileId(fileId)
       const token = localStorage.getItem('token')
-      if (!token) {
-        navigate('/login')
-        return
-      }
       const base = import.meta.env.VITE_API_URL || '/api'
-      const res = await fetch(`${base}/files/${fileId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {}
+      const res = await fetch(`${base}/files/${fileId}`, { headers })
       if (!res.ok) {
         toast.error('Download failed')
         return
@@ -105,6 +102,8 @@ const ChallengeDetail: React.FC = () => {
       window.URL.revokeObjectURL(url)
     } catch {
       toast.error('Error downloading file')
+    } finally {
+      setDownloadingFileId(null)
     }
   }
 
@@ -170,7 +169,7 @@ const ChallengeDetail: React.FC = () => {
             </button>
             <div className="text-right">
               <p className="text-sm text-gray-400">Your Score</p>
-              <p className="text-2xl font-bold text-cyan-400">{0}</p>
+              <p className="text-2xl font-bold text-red-400">{0}</p>
             </div>
           </div>
         </div>
@@ -184,7 +183,7 @@ const ChallengeDetail: React.FC = () => {
               <span className="text-4xl">{getCategoryIcon(challenge.category)}</span>
               <div>
                 <div className="flex items-center space-x-3 mb-2">
-                  <h1 className="text-3xl font-bold text-white">{challenge.title}</h1>
+                  <h1 className="text-3xl font-bold text-white horror-title">{challenge.title}</h1>
                   {challenge.solved && (
                     <div className="flex items-center space-x-1 text-green-400">
                       <CheckCircle className="h-6 w-6" />
@@ -192,6 +191,7 @@ const ChallengeDetail: React.FC = () => {
                     </div>
                   )}
                 </div>
+                <div className="horror-divider mb-3"></div>
                 <div className="flex items-center space-x-4">
                   <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${getDifficultyColor(challenge.difficulty)} bg-gray-700`}>
                     {challenge.difficulty}
@@ -232,9 +232,10 @@ const ChallengeDetail: React.FC = () => {
                       </div>
                       <button
                         onClick={() => downloadFile(file.id, file.filename)}
-                        className="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-sm font-medium transition-colors"
+                        disabled={downloadingFileId === file.id}
+                        className="px-3 py-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded text-sm font-medium transition-colors horror-glow"
                       >
-                        Download
+                        {downloadingFileId === file.id ? 'Downloading...' : 'Download'}
                       </button>
                     </div>
                   ))}

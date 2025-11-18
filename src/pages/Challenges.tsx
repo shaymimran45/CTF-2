@@ -85,7 +85,8 @@ const Challenges: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white">Challenges</h1>
+              <h1 className="text-3xl font-bold text-white horror-title">Challenges</h1>
+              <div className="mt-2 horror-divider"></div>
               <p className="text-gray-400 mt-1">
                 Test your skills across {categories.length} categories
               </p>
@@ -93,7 +94,7 @@ const Challenges: React.FC = () => {
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <p className="text-sm text-gray-400">Your Score</p>
-                <p className="text-2xl font-bold text-cyan-400">{0}</p>
+                <p className="text-2xl font-bold text-red-400">{0}</p>
               </div>
             </div>
           </div>
@@ -183,7 +184,7 @@ const Challenges: React.FC = () => {
         {/* Loading State */}
         {isLoading && (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
           </div>
         )}
 
@@ -206,7 +207,7 @@ const Challenges: React.FC = () => {
             {filteredChallenges.map(challenge => (
               <div
                 key={challenge.id}
-                className={`bg-gray-800 border rounded-lg p-6 hover:bg-gray-750 transition-all cursor-pointer ${
+                className={`bg-gray-800 border rounded-lg p-6 hover:bg-gray-700 transition-all cursor-pointer horror-glow ${
                   challenge.solved
                     ? 'border-green-500 shadow-lg shadow-green-500/20'
                     : 'border-gray-700 hover:border-gray-600'
@@ -217,7 +218,7 @@ const Challenges: React.FC = () => {
                   <div className="flex items-center space-x-3">
                     <span className="text-2xl">{getCategoryIcon(challenge.category)}</span>
                     <div>
-                      <h3 className="text-lg font-semibold text-white group-hover:text-cyan-400">
+                      <h3 className="text-lg font-semibold text-white group-hover:text-red-400">
                         {challenge.title}
                       </h3>
                       <p className="text-sm text-gray-400 capitalize">
@@ -238,7 +239,7 @@ const Challenges: React.FC = () => {
                   <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${getDifficultyColor(challenge.difficulty)}`}>
                     {challenge.difficulty}
                   </span>
-                  <div className="flex items-center space-x-2 text-cyan-400">
+                  <div className="flex items-center space-x-2 text-red-400">
                     <Trophy className="h-4 w-4" />
                     <span className="font-semibold">{challenge.points}</span>
                   </div>
@@ -271,7 +272,7 @@ const Challenges: React.FC = () => {
                       e.stopPropagation()
                       handleSubmitFlag(challenge.id)
                     }}
-                    className="w-full mt-4 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors"
+                    className="w-full mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors horror-glow"
                   >
                     Submit Flag
                   </button>

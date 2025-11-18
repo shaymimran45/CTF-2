@@ -12,3 +12,32 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+.horror {
+  --horror-bg: radial-gradient(1200px 600px at 20% 10%, rgba(120,0,0,0.25) 0%, rgba(0,0,0,0.9) 45%),
+               radial-gradient(800px 400px at 80% 90%, rgba(180,16,16,0.15) 0%, rgba(0,0,0,0.95) 50%),
+               linear-gradient(180deg, #0b0b0f 0%, #000 100%);
+  --horror-panel: rgba(20, 0, 0, 0.65);
+  --horror-border: #3a0000;
+  --horror-accent: #ef4444; /* blood red */
+  --horror-highlight: #f59e0b; /* amber */
+}
+
+.horror body,
+.horror .min-h-screen {
+  background-image: var(--horror-bg);
+  background-color: #0b0b0f !important;
+}
+
+.horror .bg-gray-900 { background-color: #0b0b0f !important; }
+.horror .bg-gray-800 { background-color: var(--horror-panel) !important; backdrop-filter: blur(2px); }
+.horror .border-gray-700 { border-color: var(--horror-border) !important; }
+.horror .text-cyan-400, .horror .text-blue-500 { color: var(--horror-accent) !important; }
+.horror .text-yellow-500 { color: var(--horror-highlight) !important; }
+.horror .text-purple-500 { color: #a21caf !important; }
+
+.horror-glow { transition: box-shadow 200ms ease, transform 200ms ease; }
+.horror-glow:hover { box-shadow: 0 0 20px rgba(239, 68, 68, 0.35), 0 0 8px rgba(245, 158, 11, 0.25); transform: translateY(-1px); }
+
+.horror-divider { height: 2px; background: linear-gradient(90deg, rgba(239,68,68,0.9) 0%, rgba(245,158,11,0.6) 50%, rgba(239,68,68,0.9) 100%); border-radius: 9999px; opacity: 0.8; }
+.horror-title { letter-spacing: 0.02em; text-shadow: 0 0 8px rgba(239,68,68,0.35); }
