@@ -14,6 +14,10 @@ export interface User {
   role: string
   teamId?: string
   createdAt: string
+  _count?: {
+    solves: number
+    submissions: number
+  }
 }
 
 export interface Challenge {
@@ -74,6 +78,16 @@ export interface Statistics {
     user: { username: string }
     challenge: { title: string; category: string; points: number }
   }>
+}
+
+export interface MyTeam {
+  id: string
+  name: string
+  description?: string
+  inviteCode: string
+  maxMembers: number
+  leaderId: string
+  memberships: Array<{ joinedAt: string; user: { id: string; username: string } }>
 }
 
 class ApiClient {
@@ -227,6 +241,71 @@ class ApiClient {
     return this.request('/admin/challenges/visibility', {
       method: 'POST',
       body: JSON.stringify({ isVisible })
+    })
+  }
+
+  async addHint(challengeId: string, content: string, penalty = 0): Promise<ApiResponse<{ hint: { id: string } }>> {
+    return this.request(`/admin/challenges/${challengeId}/hints`, {
+      method: 'POST',
+      body: JSON.stringify({ content, penalty })
+    })
+  }
+
+  async updateHint(hintId: string, payload: { content?: string; penalty?: number }): Promise<ApiResponse<{ hint: { id: string } }>> {
+    return this.request(`/admin/hints/${hintId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload)
+    })
+  }
+
+  async deleteHint(hintId: string): Promise<ApiResponse<{ deleted: boolean }>> {
+    return this.request(`/admin/hints/${hintId}`, { method: 'DELETE' })
+  }
+
+  async addFiles(challengeId: string, files: File[]): Promise<ApiResponse<{ challenge: Challenge }>> {
+    const form = new FormData()
+    files.forEach((f) => form.append('files', f, f.name))
+    const token = localStorage.getItem('token')
+    const response = await fetch(`${API_BASE_URL}/admin/challenges/${challengeId}/files`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      body: form,
+    })
+    const data = await response.json()
+    if (!response.ok) return { success: false, error: data.error || 'An error occurred' }
+    return { success: true, data }
+  }
+
+  async deleteFile(fileId: string): Promise<ApiResponse<{ deleted: boolean }>> {
+    return this.request(`/admin/files/${fileId}`, { method: 'DELETE' })
+  }
+
+  async createTeam(name: string, description?: string, maxMembers?: number): Promise<ApiResponse<{ team: { id: string } }>> {
+    return this.request('/teams', {
+      method: 'POST',
+      body: JSON.stringify({ name, description, maxMembers })
+    })
+  }
+
+  async joinTeam(inviteCode: string): Promise<ApiResponse<{ joined: boolean }>> {
+    return this.request('/teams/join', {
+      method: 'POST',
+      body: JSON.stringify({ inviteCode })
+    })
+  }
+
+  async leaveTeam(): Promise<ApiResponse<{ left: boolean }>> {
+    return this.request('/teams/leave', { method: 'POST' })
+  }
+
+  async getMyTeam(): Promise<ApiResponse<{ team: MyTeam | null }>> {
+    return this.request('/teams/me')
+  }
+
+  async kickMember(memberId: string): Promise<ApiResponse<{ kicked: boolean }>> {
+    return this.request('/teams/kick', {
+      method: 'POST',
+      body: JSON.stringify({ memberId })
     })
   }
 }

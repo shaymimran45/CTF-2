@@ -17,6 +17,8 @@ export default function AdminPanel() {
     flag: '',
     isVisible: true
   })
+  const [newHint, setNewHint] = useState({ content: '', penalty: 0 })
+  const [newFiles, setNewFiles] = useState<FileList | null>(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('web')
@@ -119,6 +121,51 @@ export default function AdminPanel() {
       toast.success('Challenge updated')
     } else {
       toast.error(res.error || 'Failed to update')
+    }
+  }
+
+  const addHintAction = async () => {
+    if (!editing || !newHint.content.trim()) return
+    const res = await api.addHint(editing.id, newHint.content.trim(), Number(newHint.penalty) || 0)
+    if (res.success) {
+      toast.success('Hint added')
+      fetchAdminChallenges()
+      setNewHint({ content: '', penalty: 0 })
+    } else {
+      toast.error(res.error || 'Failed to add hint')
+    }
+  }
+
+  const deleteHintAction = async (hintId: string) => {
+    const res = await api.deleteHint(hintId)
+    if (res.success) {
+      toast.success('Hint deleted')
+      fetchAdminChallenges()
+    } else {
+      toast.error(res.error || 'Failed to delete hint')
+    }
+  }
+
+  const addFilesAction = async () => {
+    if (!editing || !newFiles || newFiles.length === 0) return
+    const files = Array.from(newFiles)
+    const res = await api.addFiles(editing.id, files)
+    if (res.success) {
+      toast.success('Files added')
+      fetchAdminChallenges()
+      setNewFiles(null)
+    } else {
+      toast.error(res.error || 'Failed to add files')
+    }
+  }
+
+  const deleteFileAction = async (fileId: string) => {
+    const res = await api.deleteFile(fileId)
+    if (res.success) {
+      toast.success('File deleted')
+      fetchAdminChallenges()
+    } else {
+      toast.error(res.error || 'Failed to delete file')
     }
   }
 
@@ -230,7 +277,7 @@ export default function AdminPanel() {
 
         {editing && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-            <div className="w-full max-w-lg bg-gray-800 border border-gray-700 rounded-lg p-6">
+            <div className="w-full max-w-2xl bg-gray-800 border border-gray-700 rounded-lg p-6">
               <h3 className="text-xl font-semibold text-white mb-4">Edit Challenge</h3>
               <div className="space-y-3">
                 <div>
@@ -276,6 +323,48 @@ export default function AdminPanel() {
                   <input id="editVisible" name="isVisible" type="checkbox" checked={editForm.isVisible} onChange={handleEditChange} />
                   <label htmlFor="editVisible" className="text-gray-300">Visible</label>
                 </div>
+                {editing && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gray-700 rounded p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-white font-medium">Hints</h4>
+                      </div>
+                      <div className="space-y-2">
+                        {editing.hints?.map((h: any) => (
+                          <div key={h.id} className="flex items-center justify-between text-sm text-gray-200">
+                            <span>{h.content}</span>
+                            <div className="flex items-center gap-2">
+                              {h.penalty > 0 && <span className="text-red-400">-{h.penalty}pts</span>}
+                              <button onClick={() => deleteHintAction(h.id)} className="px-2 py-1 bg-red-600 rounded text-white">Delete</button>
+                            </div>
+                          </div>
+                        ))}
+                        <div className="mt-2 space-y-2">
+                          <input placeholder="New hint" className="w-full px-3 py-2 rounded bg-gray-600 text-white" value={newHint.content} onChange={(e) => setNewHint({ ...newHint, content: e.target.value })} />
+                          <input type="number" placeholder="Penalty (pts)" className="w-full px-3 py-2 rounded bg-gray-600 text-white" value={newHint.penalty} onChange={(e) => setNewHint({ ...newHint, penalty: Number(e.target.value) })} />
+                          <button onClick={addHintAction} className="px-3 py-1 bg-red-600 text-white rounded">Add Hint</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-700 rounded p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-white font-medium">Files</h4>
+                      </div>
+                      <div className="space-y-2">
+                        {editing.files?.map((f: any) => (
+                          <div key={f.id} className="flex items-center justify-between text-sm text-gray-200">
+                            <span>{f.filename} ({(f.fileSize/1024).toFixed(1)} KB)</span>
+                            <button onClick={() => deleteFileAction(f.id)} className="px-2 py-1 bg-red-600 rounded text-white">Delete</button>
+                          </div>
+                        ))}
+                        <div className="mt-2 space-y-2">
+                          <input type="file" multiple onChange={(e) => setNewFiles(e.target.files)} className="text-gray-200" />
+                          <button onClick={addFilesAction} className="px-3 py-1 bg-red-600 text-white rounded">Add Files</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="mt-4 flex justify-end gap-2">
                 <button onClick={() => setEditing(null)} className="px-3 py-1 rounded bg-gray-600 text-white hover:bg-gray-500">Cancel</button>

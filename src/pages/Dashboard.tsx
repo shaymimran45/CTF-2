@@ -2,14 +2,17 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 import { useChallengeStore } from '../stores/challengeStore'
+import { useLeaderboardStore } from '../stores/leaderboardStore'
 import { Trophy, Users, Target, Clock, User, LogOut } from 'lucide-react'
 
 export default function Dashboard() {
   const { user, logout } = useAuthStore()
   const { challenges, fetchChallenges, isLoading } = useChallengeStore()
+  const { statistics, fetchStatistics } = useLeaderboardStore()
 
   useEffect(() => {
     fetchChallenges()
+    fetchStatistics()
   }, [])
 
   const totalChallenges = challenges.length
@@ -129,21 +132,51 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Competition Timer */}
+        {/* Competition Info */}
         <div className="bg-gray-800 overflow-hidden shadow rounded-lg mb-8">
           <div className="px-4 py-5 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-medium text-white">CTF Competition 2024</h3>
-                <p className="text-sm text-gray-400">Annual cybersecurity competition</p>
+                <h3 className="text-lg font-medium text-white horror-title">CTF Competition</h3>
+                <p className="text-sm text-gray-400">Stay sharp and hunt flags</p>
               </div>
-              <div className="flex items-center text-blue-400">
+              <div className="flex items-center text-red-400">
                 <Clock className="h-5 w-5 mr-2" />
-                <span className="text-sm font-medium">Competition Active</span>
+                <span className="text-sm font-medium">Active</span>
               </div>
             </div>
           </div>
         </div>
+
+        {statistics && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Categories</h3>
+              <div className="flex flex-wrap gap-2">
+                {statistics.categories.map((c) => (
+                  <span key={c.category} className="px-3 py-1 rounded-full bg-gray-700 text-sm text-gray-200">
+                    {c.category} ({c._count.id})
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Recent Solves</h3>
+              {statistics.recentSolves.length === 0 ? (
+                <div className="text-gray-400">No recent activity</div>
+              ) : (
+                <div className="space-y-2">
+                  {statistics.recentSolves.map((s) => (
+                    <div key={s.id} className="flex items-center justify-between text-sm text-gray-200">
+                      <span>{s.user.username} solved {s.challenge.title}</span>
+                      <span className="text-yellow-500">+{s.pointsAwarded}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -207,6 +240,20 @@ export default function Dashboard() {
               </div>
             </Link>
           )}
+          <Link
+            to="/team"
+            className="bg-gray-800 overflow-hidden shadow rounded-lg hover:bg-gray-700 transition-colors horror-glow"
+          >
+            <div className="p-6">
+              <div className="flex items-center">
+                <Users className="h-8 w-8 text-purple-500" />
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-white">Team</h3>
+                  <p className="text-sm text-gray-400">Create or join a team</p>
+                </div>
+              </div>
+            </div>
+          </Link>
         </div>
       </main>
     </div>

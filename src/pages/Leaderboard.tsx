@@ -133,7 +133,7 @@ const Leaderboard: React.FC = () => {
                       onClick={() => setType('individual')}
                       className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                         type === 'individual'
-                          ? 'bg-cyan-600 text-white'
+                          ? 'bg-red-600 text-white horror-glow'
                           : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                       }`}
                     >
@@ -144,7 +144,7 @@ const Leaderboard: React.FC = () => {
                       onClick={() => setType('team')}
                       className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                         type === 'team'
-                          ? 'bg-cyan-600 text-white'
+                          ? 'bg-red-600 text-white horror-glow'
                           : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                       }`}
                     >
@@ -160,7 +160,7 @@ const Leaderboard: React.FC = () => {
 
         {isLoading && (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
           </div>
         )}
 

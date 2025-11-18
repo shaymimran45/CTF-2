@@ -155,6 +155,16 @@ export const submitFlag = async (req: AuthenticatedRequest, res: Response): Prom
       return
     }
 
+    if (challenge.maxAttempts && challenge.maxAttempts > 0) {
+      const incorrectAttempts = await prisma.submission.count({
+        where: { userId, challengeId: id, isCorrect: false }
+      })
+      if (incorrectAttempts >= challenge.maxAttempts) {
+        res.status(429).json({ error: 'Max attempts reached' })
+        return
+      }
+    }
+
     // Dynamic flag format support
     const allowedPrefixes = (process.env.FLAG_PREFIXES || 'CTF,flag')
       .split(',')
@@ -388,7 +398,8 @@ export const getAllChallengesAdmin = async (_req: AuthenticatedRequest, res: Res
     const challenges = await prisma.challenge.findMany({
       include: {
         _count: { select: { solves: true } },
-        files: { select: { id: true, filename: true, fileSize: true, uploadedAt: true } }
+        files: { select: { id: true, filename: true, fileSize: true, uploadedAt: true } },
+        hints: { select: { id: true, content: true, penalty: true, createdAt: true } }
       },
       orderBy: [{ createdAt: 'desc' }]
     })
@@ -457,6 +468,123 @@ export const setAllVisibility = async (req: AuthenticatedRequest, res: Response)
     res.json({ updatedCount: result.count })
   } catch (error) {
     console.error('Set all visibility error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const addHint = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const { content, penalty } = req.body as { content: string; penalty?: number | string }
+    if (!content) {
+      res.status(400).json({ error: 'Content required' })
+      return
+    }
+    const challenge = await prisma.challenge.findUnique({ where: { id } })
+    if (!challenge) {
+      res.status(404).json({ error: 'Challenge not found' })
+      return
+    }
+    const hint = await prisma.hint.create({
+      data: {
+        challengeId: id,
+        content,
+        penalty: typeof penalty !== 'undefined' ? Number(penalty) : 0
+      }
+    })
+    res.status(201).json({ hint })
+  } catch (error) {
+    console.error('Add hint error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const updateHint = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { hintId } = req.params
+    const { content, penalty } = req.body as { content?: string; penalty?: number | string }
+    const existing = await prisma.hint.findUnique({ where: { id: hintId } })
+    if (!existing) {
+      res.status(404).json({ error: 'Hint not found' })
+      return
+    }
+    const updated = await prisma.hint.update({
+      where: { id: hintId },
+      data: {
+        content: typeof content === 'string' ? content : existing.content,
+        penalty: typeof penalty !== 'undefined' ? Number(penalty) : existing.penalty
+      }
+    })
+    res.json({ hint: updated })
+  } catch (error) {
+    console.error('Update hint error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const deleteHint = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { hintId } = req.params
+    const existing = await prisma.hint.findUnique({ where: { id: hintId } })
+    if (!existing) {
+      res.status(404).json({ error: 'Hint not found' })
+      return
+    }
+    await prisma.hint.delete({ where: { id: hintId } })
+    res.json({ deleted: true })
+  } catch (error) {
+    console.error('Delete hint error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const addFilesToChallenge = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const challenge = await prisma.challenge.findUnique({ where: { id } })
+    if (!challenge) {
+      res.status(404).json({ error: 'Challenge not found' })
+      return
+    }
+    const files = (req as unknown as { files?: Express.Multer.File[] }).files || []
+    if (files.length === 0) {
+      res.status(400).json({ error: 'No files uploaded' })
+      return
+    }
+    const records = files.map((f) => ({
+      challengeId: id,
+      filename: f.originalname,
+      filePath: path.relative(process.cwd(), f.path),
+      fileSize: f.size
+    }))
+    await prisma.challengeFile.createMany({ data: records })
+    const created = await prisma.challenge.findUnique({
+      where: { id },
+      include: { files: { select: { id: true, filename: true, fileSize: true, uploadedAt: true } } }
+    })
+    res.status(201).json({ challenge: created })
+  } catch (error) {
+    console.error('Add files to challenge error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const deleteChallengeFile = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { fileId } = req.params
+    const file = await prisma.challengeFile.findUnique({ where: { id: fileId } })
+    if (!file) {
+      res.status(404).json({ error: 'File not found' })
+      return
+    }
+    const abs = path.isAbsolute(file.filePath) ? file.filePath : path.join(process.cwd(), file.filePath)
+    if (fs.existsSync(abs)) {
+      try { fs.unlinkSync(abs) } catch {}
+    }
+    await prisma.challengeFile.delete({ where: { id: fileId } })
+    res.json({ deleted: true })
+  } catch (error) {
+    console.error('Delete challenge file error:', error)
     res.status(500).json({ error: 'Internal server error' })
   }
 }
