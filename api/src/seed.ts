@@ -1,5 +1,4 @@
 import prisma from './lib/prisma'
-import bcrypt from 'bcryptjs'
 
 async function seed() {
   try {
@@ -85,21 +84,7 @@ async function seed() {
     console.log(`Created competition: ${competition.name}`)
     console.log('Created 6 sample challenges across different categories')
 
-    const adminEmail = 'admin@example.com'
-    const adminUsername = 'admin'
-    const existingAdmin = await prisma.user.findFirst({ where: { OR: [{ email: adminEmail }, { username: adminUsername }] } })
-    if (!existingAdmin) {
-      const passwordHash = await bcrypt.hash('Admin123!', 12)
-      await prisma.user.create({
-        data: {
-          email: adminEmail,
-          username: adminUsername,
-          passwordHash,
-          role: 'admin'
-        }
-      })
-      console.log('Created admin user: admin@example.com / Admin123!')
-    }
+    // Admin user creation is managed by a separate script using environment variables
   } catch (error) {
     console.error('Error seeding database:', error)
   } finally {

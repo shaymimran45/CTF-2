@@ -1,6 +1,6 @@
 import express from 'express'
 import { register, login, getProfile } from '../controllers/authController'
-import { getChallenges, getChallenge, submitFlag, getCategories, createChallenge, deleteChallenge, deleteAllChallenges } from '../controllers/challengeController'
+import { getChallenges, getChallenge, submitFlag, getCategories, createChallenge, deleteChallenge, deleteAllChallenges, downloadFile } from '../controllers/challengeController'
 import { getLeaderboard, getStatistics } from '../controllers/leaderboardController'
 import { authenticateToken, requireRole } from '../lib/auth'
 import multer from 'multer'
@@ -39,6 +39,9 @@ router.post('/challenges/:id/submit', authenticateToken, submitFlag)
 router.post('/admin/challenges', authenticateToken, requireRole(['admin']), upload.array('files'), createChallenge)
 router.delete('/admin/challenges/:id', authenticateToken, requireRole(['admin']), deleteChallenge)
 router.delete('/admin/challenges', authenticateToken, requireRole(['admin']), deleteAllChallenges)
+
+// File download
+router.get('/files/:id', authenticateToken, downloadFile)
 
 // Leaderboard routes
 router.get('/leaderboard', getLeaderboard)

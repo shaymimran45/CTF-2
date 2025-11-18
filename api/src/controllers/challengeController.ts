@@ -155,8 +155,30 @@ export const submitFlag = async (req: AuthenticatedRequest, res: Response): Prom
       return
     }
 
-    // Check flag
-    const isCorrect = challenge.flag === flag.trim()
+    // Dynamic flag format support
+    const allowedPrefixes = (process.env.FLAG_PREFIXES || 'CTF,flag')
+      .split(',')
+      .map(s => s.trim())
+
+    const parseFlag = (f: string) => {
+      const m = f.match(/^([A-Za-z0-9_]+)\{(.+)\}$/)
+      if (!m) return { raw: f.trim(), prefix: null as string | null, value: null as string | null }
+      return { raw: f.trim(), prefix: m[1], value: m[2] }
+    }
+
+    const submitted = parseFlag(flag.trim())
+    const correct = parseFlag(challenge.flag)
+
+    let isCorrect = false
+    if (correct.value !== null) {
+      // If challenge flag has a prefix format, allow any allowed prefix, but value must match
+      const prefixOk = submitted.prefix !== null && (
+        submitted.prefix === correct.prefix || allowedPrefixes.includes(submitted.prefix)
+      )
+      isCorrect = prefixOk && submitted.value === correct.value
+    } else {
+      isCorrect = challenge.flag === flag.trim()
+    }
 
     // Create submission
     const submission = await prisma.submission.create({
@@ -212,6 +234,32 @@ export const getCategories = async (req: Request, res: Response): Promise<void> 
     res.json({ categories: categoryList })
   } catch (error) {
     console.error('Get categories error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const downloadFile = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const file = await prisma.challengeFile.findUnique({ where: { id } })
+    if (!file) {
+      res.status(404).json({ error: 'File not found' })
+      return
+    }
+
+    const challenge = await prisma.challenge.findUnique({ where: { id: file.challengeId } })
+    if (!challenge || !challenge.isVisible) {
+      res.status(403).json({ error: 'File not accessible' })
+      return
+    }
+
+    const absolutePath = path.isAbsolute(file.filePath)
+      ? file.filePath
+      : path.join(process.cwd(), file.filePath)
+
+    res.download(absolutePath, file.filename)
+  } catch (error) {
+    console.error('Download file error:', error)
     res.status(500).json({ error: 'Internal server error' })
   }
 }

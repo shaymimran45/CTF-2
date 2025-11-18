@@ -79,15 +79,8 @@ const ChallengeDetail: React.FC = () => {
     toast.info(`Hint unlocked! ${penalty > 0 ? `${penalty} point penalty applied.` : ''}`)
   }
 
-  const downloadFile = async (fileId: string, filename: string) => {
-    try {
-      // In a real implementation, you would have a download endpoint
-      // For now, we'll simulate a download
-      toast.info(`Downloading ${filename}...`)
-      // window.open(`/api/files/${fileId}`, '_blank')
-    } catch (error) {
-      toast.error('Error downloading file')
-    }
+  const downloadFile = (fileId: string) => {
+    window.open(`/api/files/${fileId}`, '_blank')
   }
 
   if (loading) {
@@ -213,7 +206,7 @@ const ChallengeDetail: React.FC = () => {
                         </p>
                       </div>
                       <button
-                        onClick={() => downloadFile(file.id, file.filename)}
+                        onClick={() => downloadFile(file.id)}
                         className="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-sm font-medium transition-colors"
                       >
                         Download
@@ -234,7 +227,7 @@ const ChallengeDetail: React.FC = () => {
                 <form onSubmit={handleSubmitFlag} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Flag Format: flag&#123;text&#125;
+                      Flag Format: e.g., CTF&#123;text&#125;
                     </label>
                     <input
                       type="text"
