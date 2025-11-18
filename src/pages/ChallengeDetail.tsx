@@ -79,8 +79,33 @@ const ChallengeDetail: React.FC = () => {
     toast.info(`Hint unlocked! ${penalty > 0 ? `${penalty} point penalty applied.` : ''}`)
   }
 
-  const downloadFile = (fileId: string) => {
-    window.open(`/api/files/${fileId}`, '_blank')
+  const downloadFile = async (fileId: string, filename: string) => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        navigate('/login')
+        return
+      }
+      const base = import.meta.env.VITE_API_URL || '/api'
+      const res = await fetch(`${base}/files/${fileId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!res.ok) {
+        toast.error('Download failed')
+        return
+      }
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      window.URL.revokeObjectURL(url)
+    } catch {
+      toast.error('Error downloading file')
+    }
   }
 
   if (loading) {
@@ -206,7 +231,7 @@ const ChallengeDetail: React.FC = () => {
                         </p>
                       </div>
                       <button
-                        onClick={() => downloadFile(file.id)}
+                        onClick={() => downloadFile(file.id, file.filename)}
                         className="px-3 py-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-sm font-medium transition-colors"
                       >
                         Download
