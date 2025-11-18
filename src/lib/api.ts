@@ -1,0 +1,203 @@
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+
+export interface ApiResponse<T> {
+  success?: boolean
+  data?: T
+  error?: string
+  message?: string
+}
+
+export interface User {
+  id: string
+  email: string
+  username: string
+  role: string
+  teamId?: string
+  createdAt: string
+}
+
+export interface Challenge {
+  id: string
+  title: string
+  description: string
+  category: string
+  difficulty: string
+  points: number
+  flag: string
+  isVisible: boolean
+  solved?: boolean
+  _count?: {
+    solves: number
+  }
+  files?: ChallengeFile[]
+  hints?: Hint[]
+}
+
+export interface ChallengeFile {
+  id: string
+  filename: string
+  fileSize: number
+  uploadedAt: string
+}
+
+export interface Hint {
+  id: string
+  content: string
+  penalty: number
+}
+
+export interface Submission {
+  correct: boolean
+  points: number
+  message: string
+}
+
+export interface LeaderboardEntry {
+  id: string
+  username?: string
+  name?: string
+  score: number
+  solves: number
+  lastSolve: string | null
+}
+
+export interface Statistics {
+  totalChallenges: number
+  totalSolves: number
+  totalUsers: number
+  categories: Array<{ category: string; _count: { id: number } }>
+  difficulties: Array<{ difficulty: string; _count: { id: number } }>
+  recentSolves: Array<{
+    id: string
+    solvedAt: string
+    pointsAwarded: number
+    user: { username: string }
+    challenge: { title: string; category: string; points: number }
+  }>
+}
+
+class ApiClient {
+  private getHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+
+    const token = localStorage.getItem('token')
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+
+    return headers
+  }
+
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
+        headers: {
+          ...this.getHeaders(),
+          ...options.headers,
+        },
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || 'An error occurred',
+        }
+      }
+
+      return {
+        success: true,
+        data,
+        message: data.message,
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: 'Network error. Please try again.',
+      }
+    }
+  }
+
+  // Auth endpoints
+  async register(email: string, username: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> {
+    return this.request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ email, username, password }),
+    })
+  }
+
+  async login(email: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> {
+    return this.request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    })
+  }
+
+  async getProfile(): Promise<ApiResponse<{ user: User }>> {
+    return this.request('/auth/profile')
+  }
+
+  // Challenge endpoints
+  async getChallenges(category?: string, difficulty?: string): Promise<ApiResponse<{ challenges: Challenge[] }>> {
+    const params = new URLSearchParams()
+    if (category) params.append('category', category)
+    if (difficulty) params.append('difficulty', difficulty)
+    
+    return this.request(`/challenges?${params.toString()}`)
+  }
+
+  async getChallenge(id: string): Promise<ApiResponse<Challenge>> {
+    return this.request(`/challenges/${id}`)
+  }
+
+  async submitFlag(id: string, flag: string): Promise<ApiResponse<Submission>> {
+    return this.request(`/challenges/${id}/submit`, {
+      method: 'POST',
+      body: JSON.stringify({ flag }),
+    })
+  }
+
+  async getCategories(): Promise<ApiResponse<{ categories: string[] }>> {
+    return this.request('/challenges/categories')
+  }
+
+  // Leaderboard endpoints
+  async getLeaderboard(type: 'individual' | 'team' = 'individual'): Promise<ApiResponse<{ leaderboard: LeaderboardEntry[] }>> {
+    const params = new URLSearchParams()
+    params.append('type', type)
+    
+    return this.request(`/leaderboard?${params.toString()}`)
+  }
+
+  async getStatistics(): Promise<ApiResponse<Statistics>> {
+    return this.request('/statistics')
+  }
+
+  async createChallenge(form: FormData): Promise<ApiResponse<{ challenge: Challenge }>> {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE_URL}/admin/challenges`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: form,
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        return { success: false, error: data.error || 'An error occurred' }
+      }
+      return { success: true, data }
+    } catch {
+      return { success: false, error: 'Network error. Please try again.' }
+    }
+  }
+}
+
+export const api = new ApiClient()
+export default api

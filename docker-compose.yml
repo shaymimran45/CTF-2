@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ctf-postgres
+    environment:
+      POSTGRES_DB: ctf_platform
+      POSTGRES_USER: ctf_user
+      POSTGRES_PASSWORD: ctf_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ctf-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: ctf-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - ctf-network
+
+volumes:
+  postgres_data:
+
+networks:
+  ctf-network:
+    driver: bridge

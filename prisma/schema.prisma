@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  username      String         @unique
+  passwordHash  String
+  role          String         @default("user")
+  teamId        String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  team          Team?          @relation(fields: [teamId], references: [id])
+  submissions   Submission[]
+  solves        Solve[]
+  teamsLed      Team[]         @relation("TeamLeader")
+  teamMemberships TeamMember[]
+  
+  @@map("users")
+}
+
+model Team {
+  id          String         @id @default(uuid())
+  name        String         @unique
+  description String?
+  inviteCode  String         @unique @default(uuid())
+  leaderId    String
+  maxMembers  Int            @default(5)
+  createdAt   DateTime       @default(now())
+  
+  leader      User           @relation("TeamLeader", fields: [leaderId], references: [id])
+  members     User[]
+  submissions Submission[]
+  solves      Solve[]
+  memberships TeamMember[]
+  
+  @@map("teams")
+}
+
+model TeamMember {
+  teamId    String
+  userId    String
+  joinedAt  DateTime @default(now())
+  
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@id([teamId, userId])
+  @@map("team_members")
+}
+
+model Competition {
+  id              String         @id @default(uuid())
+  name            String
+  description     String?
+  startTime       DateTime
+  endTime         DateTime
+  competitionType String         @default("individual")
+  isPublic        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  
+  challenges      Challenge[]
+  
+  @@map("competitions")
+}
+
+model Challenge {
+  id              String           @id @default(uuid())
+  title           String
+  description     String
+  category        String
+  difficulty      String           @default("medium")
+  points          Int
+  flag            String
+  competitionId   String
+  isVisible       Boolean          @default(true)
+  maxAttempts     Int              @default(0)
+  createdAt       DateTime         @default(now())
+  
+  competition     Competition      @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  files           ChallengeFile[]
+  hints           Hint[]
+  submissions     Submission[]
+  solves          Solve[]
+  
+  @@map("challenges")
+}
+
+model ChallengeFile {
+  id           String    @id @default(uuid())
+  challengeId  String
+  filename     String
+  filePath     String
+  fileSize     Int
+  uploadedAt   DateTime  @default(now())
+  
+  challenge    Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  
+  @@map("challenge_files")
+}
+
+model Hint {
+  id          String    @id @default(uuid())
+  challengeId String
+  content     String
+  penalty     Int       @default(0)
+  createdAt   DateTime  @default(now())
+  
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  
+  @@map("hints")
+}
+
+model Submission {
+  id             String    @id @default(uuid())
+  userId         String
+  teamId         String?
+  challengeId    String
+  submittedFlag  String
+  isCorrect      Boolean
+  pointsAwarded  Int       @default(0)
+  submittedAt    DateTime  @default(now())
+  
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team           Team?     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  challenge      Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  solve          Solve?
+  
+  @@map("submissions")
+}
+
+model Solve {
+  id            String      @id @default(uuid())
+  userId        String
+  teamId        String?
+  challengeId   String
+  submissionId  String      @unique
+  solvedAt      DateTime    @default(now())
+  pointsAwarded Int
+  
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team          Team?       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  challenge     Challenge   @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  submission    Submission  @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, challengeId])
+  @@unique([teamId, challengeId])
+  @@map("solves")
+}
