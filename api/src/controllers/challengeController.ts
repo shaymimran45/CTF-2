@@ -15,6 +15,16 @@ interface CreateChallengeBody {
   isVisible?: boolean | string
 }
 
+interface CreateCompetitionBody {
+  name: string
+  description?: string
+  startTime: string
+  endTime: string
+  competitionType?: string
+  isPublic?: boolean | string
+  challengeIds?: string[]
+}
+
 export const getChallenges = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const { category, difficulty } = req.query
@@ -585,6 +595,52 @@ export const deleteChallengeFile = async (req: AuthenticatedRequest, res: Respon
     res.json({ deleted: true })
   } catch (error) {
     console.error('Delete challenge file error:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+}
+
+export const createCompetition = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const { name, description, startTime, endTime, competitionType, isPublic, challengeIds } = req.body as CreateCompetitionBody
+
+    if (!name || !startTime || !endTime) {
+      res.status(400).json({ error: 'Name, startTime, and endTime are required' })
+      return
+    }
+
+    const start = new Date(startTime)
+    const end = new Date(endTime)
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      res.status(400).json({ error: 'Invalid startTime or endTime' })
+      return
+    }
+    if (end <= start) {
+      res.status(400).json({ error: 'endTime must be after startTime' })
+      return
+    }
+
+    const competition = await prisma.competition.create({
+      data: {
+        name,
+        description: description || null,
+        startTime: start,
+        endTime: end,
+        competitionType: competitionType || 'individual',
+        isPublic: typeof isPublic !== 'undefined' ? (isPublic === 'true' || isPublic === true) : true
+      }
+    })
+
+    if (Array.isArray(challengeIds) && challengeIds.length > 0) {
+      await prisma.challenge.updateMany({
+        where: { id: { in: challengeIds } },
+        data: { competitionId: competition.id }
+      })
+    }
+
+    const created = await prisma.competition.findUnique({ where: { id: competition.id } })
+    res.status(201).json({ competition: created })
+  } catch (error) {
+    console.error('Create competition error:', error)
     res.status(500).json({ error: 'Internal server error' })
   }
 }

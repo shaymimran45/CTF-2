@@ -1,10 +1,11 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
-import { User, Trophy, Target } from 'lucide-react'
+import { User, Trophy, Target, ArrowLeft } from 'lucide-react'
 
 export default function Profile() {
   const navigate = useNavigate()
+  const goBack = () => navigate(-1)
   const { user, fetchProfile } = useAuthStore()
 
   useEffect(() => {
@@ -30,6 +31,10 @@ export default function Profile() {
               <p className="text-sm text-gray-400">Member since</p>
               <p className="text-sm font-medium">{new Date(user.createdAt).toLocaleDateString()}</p>
             </div>
+            <button onClick={goBack} className="px-2 py-1 rounded btn-blood flex items-center gap-1">
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
           </div>
           <div className="mt-2 horror-divider"></div>
         </div>

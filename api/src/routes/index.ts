@@ -1,6 +1,6 @@
 import express from 'express'
 import { register, login, getProfile } from '../controllers/authController'
-import { getChallenges, getChallenge, submitFlag, getCategories, createChallenge, deleteChallenge, deleteAllChallenges, downloadFile, getAllChallengesAdmin, updateChallenge, toggleVisibility, setAllVisibility, addHint, updateHint, deleteHint, addFilesToChallenge, deleteChallengeFile } from '../controllers/challengeController'
+import { getChallenges, getChallenge, submitFlag, getCategories, createChallenge, deleteChallenge, deleteAllChallenges, downloadFile, getAllChallengesAdmin, updateChallenge, toggleVisibility, setAllVisibility, addHint, updateHint, deleteHint, addFilesToChallenge, deleteChallengeFile, createCompetition } from '../controllers/challengeController'
 import { getLeaderboard, getStatistics, createTeam, joinTeam, leaveTeam, getMyTeam, kickMember } from '../controllers/leaderboardController'
 import { authenticateToken, requireRole } from '../lib/auth'
 import multer from 'multer'
@@ -48,6 +48,7 @@ router.patch('/admin/hints/:hintId', authenticateToken, requireRole(['admin']), 
 router.delete('/admin/hints/:hintId', authenticateToken, requireRole(['admin']), deleteHint)
 router.post('/admin/challenges/:id/files', authenticateToken, requireRole(['admin']), upload.array('files'), addFilesToChallenge)
 router.delete('/admin/files/:fileId', authenticateToken, requireRole(['admin']), deleteChallengeFile)
+router.post('/admin/competitions', authenticateToken, requireRole(['admin']), createCompetition)
 
 // File download
 router.get('/files/:id', downloadFile)

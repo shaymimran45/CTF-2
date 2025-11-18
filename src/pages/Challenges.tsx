@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useChallengeStore } from '../stores/challengeStore'
 import { useAuthStore } from '../stores/authStore'
-import { Trophy, Filter, Search, Flag, Download, Lightbulb, Lock, CheckCircle } from 'lucide-react'
+import { Trophy, Filter, Search, Flag, Download, Lightbulb, CheckCircle } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 
 const Challenges: React.FC = () => {
   const navigate = useNavigate()
@@ -74,6 +75,8 @@ const Challenges: React.FC = () => {
     navigate(`/challenges/${challengeId}`)
   }
 
+  const goBack = () => navigate(-1)
+
   if (!user) {
     return null
   }
@@ -81,10 +84,14 @@ const Challenges: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700">
+      <div className="bg-gray-800 header-horror">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex items-center gap-3">
+              <button onClick={goBack} className="px-2 py-1 rounded btn-blood flex items-center gap-1">
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </button>
               <h1 className="text-3xl font-bold text-white horror-title">Challenges</h1>
               <div className="mt-2 horror-divider"></div>
               <p className="text-gray-400 mt-1">
@@ -112,12 +119,12 @@ const Challenges: React.FC = () => {
                 placeholder="Search challenges..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent card-horror"
               />
             </div>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center space-x-2 px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white hover:bg-gray-700 transition-colors"
+              className="flex items-center space-x-2 px-4 py-3 rounded-lg text-white btn-blood transition-colors"
             >
               <Filter className="h-5 w-5" />
               <span>Filters</span>
@@ -207,10 +214,10 @@ const Challenges: React.FC = () => {
             {filteredChallenges.map(challenge => (
               <div
                 key={challenge.id}
-                className={`bg-gray-800 border rounded-lg p-6 hover:bg-gray-700 transition-all cursor-pointer horror-glow ${
+                className={`card-horror border rounded-lg p-6 transition-all cursor-pointer horror-glow ${
                   challenge.solved
                     ? 'border-green-500 shadow-lg shadow-green-500/20'
-                    : 'border-gray-700 hover:border-gray-600'
+                    : 'border-gray-700'
                 }`}
                 onClick={() => handleChallengeClick(challenge.id)}
               >
@@ -272,7 +279,7 @@ const Challenges: React.FC = () => {
                       e.stopPropagation()
                       handleSubmitFlag(challenge.id)
                     }}
-                    className="w-full mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors horror-glow"
+                    className="w-full mt-4 px-4 py-2 text-white rounded-lg font-medium transition-colors horror-glow btn-blood"
                   >
                     Submit Flag
                   </button>

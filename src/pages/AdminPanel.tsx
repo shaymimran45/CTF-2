@@ -29,6 +29,14 @@ export default function AdminPanel() {
   const [files, setFiles] = useState<FileList | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const [compName, setCompName] = useState('')
+  const [compDescription, setCompDescription] = useState('')
+  const [compStart, setCompStart] = useState('')
+  const [compEnd, setCompEnd] = useState('')
+  const [compType, setCompType] = useState('individual')
+  const [compPublic, setCompPublic] = useState(true)
+  const [selectedChallengeIds, setSelectedChallengeIds] = useState<string[]>([])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -81,6 +89,40 @@ export default function AdminPanel() {
       toast.success('Visibility updated')
     } else {
       toast.error(res.error || 'Failed to update visibility')
+    }
+  }
+
+  const toggleSelectChallenge = (id: string) => {
+    setSelectedChallengeIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  }
+
+  const handleCreateCompetition = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!compName || !compStart || !compEnd) {
+      toast.error('Name, start and end time required')
+      return
+    }
+    const payload = {
+      name: compName,
+      description: compDescription || undefined,
+      startTime: compStart,
+      endTime: compEnd,
+      competitionType: compType,
+      isPublic: compPublic,
+      challengeIds: selectedChallengeIds
+    }
+    const res = await api.createCompetition(payload)
+    if (res.success) {
+      toast.success('Competition created')
+      setCompName('')
+      setCompDescription('')
+      setCompStart('')
+      setCompEnd('')
+      setCompType('individual')
+      setCompPublic(true)
+      setSelectedChallengeIds([])
+    } else {
+      toast.error(res.error || 'Failed to create competition')
     }
   }
 
@@ -373,6 +415,54 @@ export default function AdminPanel() {
             </div>
           </div>
         )}
+
+        <div className="mt-8 bg-gray-800 border border-gray-700 rounded-lg p-6">
+          <h3 className="text-xl font-semibold text-white mb-4 horror-title">Create Competition</h3>
+          <form className="space-y-4" onSubmit={handleCreateCompetition}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-gray-300 mb-1">Name</label>
+                <input className="w-full px-3 py-2 rounded bg-gray-700 text-white" value={compName} onChange={(e) => setCompName(e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-gray-300 mb-1">Type</label>
+                <select className="w-full px-3 py-2 rounded bg-gray-700 text-white" value={compType} onChange={(e) => setCompType(e.target.value)}>
+                  <option value="individual">Individual</option>
+                  <option value="team">Team</option>
+                  <option value="mixed">Mixed</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-gray-300 mb-1">Start</label>
+                <input type="datetime-local" className="w-full px-3 py-2 rounded bg-gray-700 text-white" value={compStart} onChange={(e) => setCompStart(e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-gray-300 mb-1">End</label>
+                <input type="datetime-local" className="w-full px-3 py-2 rounded bg-gray-700 text-white" value={compEnd} onChange={(e) => setCompEnd(e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-gray-300 mb-1">Description</label>
+              <textarea className="w-full px-3 py-2 rounded bg-gray-700 text-white" rows={3} value={compDescription} onChange={(e) => setCompDescription(e.target.value)} />
+            </div>
+            <div className="flex items-center gap-2">
+              <input id="compPublic" type="checkbox" checked={compPublic} onChange={(e) => setCompPublic(e.target.checked)} />
+              <label htmlFor="compPublic" className="text-gray-300">Public</label>
+            </div>
+            <div>
+              <p className="text-gray-300 mb-2">Select Challenges</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {adminChallenges.map(c => (
+                  <label key={c.id} className="flex items-center gap-2 p-2 bg-gray-700 rounded">
+                    <input type="checkbox" checked={selectedChallengeIds.includes(c.id)} onChange={() => toggleSelectChallenge(c.id)} />
+                    <span className="text-sm text-white">{c.title}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <button type="submit" className="px-3 py-2 text-white rounded btn-blood horror-glow">Create Competition</button>
+          </form>
+        </div>
       </div>
     </div>
   )

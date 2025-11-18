@@ -2,6 +2,7 @@
  * This is a API server
  */
 
+import 'dotenv/config'
 import express, {
   type Request,
   type Response,
@@ -9,7 +10,6 @@ import express, {
 } from 'express'
 import cors from 'cors'
 import path from 'path'
-import dotenv from 'dotenv'
 import { fileURLToPath } from 'url'
 import routes from './src/routes/index.js'
 import fs from 'fs'
@@ -18,8 +18,7 @@ import fs from 'fs'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// load env
-dotenv.config()
+// env is already loaded by import 'dotenv/config'
 
 const app: express.Application = express()
 

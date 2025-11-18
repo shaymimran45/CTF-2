@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useLeaderboardStore } from '../stores/leaderboardStore'
 import { useAuthStore } from '../stores/authStore'
 import { Trophy, Users, User, TrendingUp, Clock, Award } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 
 const Leaderboard: React.FC = () => {
   const navigate = useNavigate()
+  const goBack = () => navigate(-1)
   const { user } = useAuthStore()
   const {
     leaderboard,
@@ -69,7 +71,7 @@ const Leaderboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <div className="bg-gray-800 border-b border-gray-700">
+      <div className="bg-gray-800 header-horror">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
@@ -83,6 +85,10 @@ const Leaderboard: React.FC = () => {
               </p>
             </div>
             <div className="flex items-center space-x-4">
+              <button onClick={goBack} className="px-2 py-1 rounded btn-blood flex items-center gap-1">
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </button>
               <div className="text-right">
                 <p className="text-sm text-gray-400">Your Rank</p>
                 <p className="text-2xl font-bold text-red-400">
@@ -97,7 +103,7 @@ const Leaderboard: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {statistics && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+            <div className="card-horror rounded-lg p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-400">Total Challenges</p>

@@ -308,6 +308,21 @@ class ApiClient {
       body: JSON.stringify({ memberId })
     })
   }
+
+  async createCompetition(payload: {
+    name: string
+    description?: string
+    startTime: string
+    endTime: string
+    competitionType?: string
+    isPublic?: boolean
+    challengeIds?: string[]
+  }): Promise<ApiResponse<{ competition: { id: string } }>> {
+    return this.request('/admin/competitions', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    })
+  }
 }
 
 export const api = new ApiClient()
